@@ -14,14 +14,14 @@ import 'dart:async';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as path;
 
-class TtsDemoWidget extends StatefulWidget {
-  const TtsDemoWidget({super.key});
+class SttDemoWidget extends StatefulWidget {
+  const SttDemoWidget({super.key});
 
   @override
-  State<TtsDemoWidget> createState() => _TtsDemoWidgetState();
+  State<SttDemoWidget> createState() => _SttDemoWidgetState();
 }
 
-class _TtsDemoWidgetState extends State<TtsDemoWidget> {
+class _SttDemoWidgetState extends State<SttDemoWidget> {
   SttServiceResponse? _sttServiceResponse;
   StreamSubscription? _sttStreamSubscription;
   SttService? _sttService;
