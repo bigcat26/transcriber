@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../viewmodels/recorder_viewmodel.dart';
 
 class RecordingScreen extends StatefulWidget {
   const RecordingScreen({super.key});
@@ -8,14 +11,13 @@ class RecordingScreen extends StatefulWidget {
 }
 
 class _RecordingScreenState extends State<RecordingScreen> {
-  bool isRecording = false;
   final TextEditingController _textController = TextEditingController();
 
-  void _toggleRecording() {
-    setState(() {
-      isRecording = !isRecording;
-    });
-  }
+  // void _toggleRecording() {
+  //   setState(() {
+  //     isRecording = !isRecording;
+  //   });
+  // }
 
   void _saveText() {
     // Add save text logic here
@@ -40,14 +42,18 @@ class _RecordingScreenState extends State<RecordingScreen> {
               )
             ]),
         floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 80.0, right: 20.0),
-          child: FloatingActionButton(
-            onPressed: _toggleRecording,
-            foregroundColor: Colors.red,
-            shape: const CircleBorder(),
-            child: Icon(isRecording ? Icons.stop : Icons.mic),
-          ),
-        ),
+            padding: const EdgeInsets.only(bottom: 80.0, right: 20.0),
+            child: Consumer<RecorderViewModel>(
+                builder: (context, viewModel, child) {
+              return FloatingActionButton(
+                onPressed: viewModel.isRecording
+                    ? viewModel.stopRecording
+                    : viewModel.startRecording,
+                foregroundColor: Colors.red,
+                shape: const CircleBorder(),
+                child: Icon(viewModel.isRecording ? Icons.stop : Icons.mic),
+              );
+            })),
         body: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -60,15 +66,10 @@ class _RecordingScreenState extends State<RecordingScreen> {
                     border: Border.all(color: Colors.black, width: 1.0),
                   ),
                   child: SingleChildScrollView(
-                    child: TextField(
-                      controller: _textController,
-                      maxLines: null,
-                      readOnly: true,
-                      decoration: const InputDecoration(
-                          hintText:
-                              'Press record button to start recording ...',
-                          // border: OutlineInputBorder(),
-                          border: InputBorder.none),
+                    child: Consumer<RecorderViewModel>(
+                      builder: (context, viewModel, child) {
+                        return Text(viewModel.transcriptionText);
+                      },
                     ),
                   ),
                 ),

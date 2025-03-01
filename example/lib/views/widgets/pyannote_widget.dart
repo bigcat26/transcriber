@@ -3,22 +3,23 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fonnx/models/sileroVad/silero_vad.dart';
-import 'package:fonnx_example/padding.dart';
+import 'package:fonnx/models/pyannote/pyannote.dart';
+import 'package:fonnx_example/app.dart';
 import 'dart:async';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as path;
 
-class SileroVadWidget extends StatefulWidget {
-  const SileroVadWidget({super.key});
+class PyannoteWidget extends StatefulWidget {
+  const PyannoteWidget({super.key});
 
   @override
-  State<SileroVadWidget> createState() => _SileroVadWidgetState();
+  State<PyannoteWidget> createState() => _PyannoteWidgetState();
 }
 
-class _SileroVadWidgetState extends State<SileroVadWidget> {
+class _PyannoteWidgetState extends State<PyannoteWidget> {
   bool? _verifyPassed;
   String? _speedTestResult;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -26,11 +27,11 @@ class _SileroVadWidgetState extends State<SileroVadWidget> {
       children: [
         heightPadding,
         Text(
-          'Silero VAD',
+          'Pyannote Speaker Diarization',
           style: Theme.of(context).textTheme.headlineLarge,
         ),
         const Text(
-            '1 MB model detects when speech is present in audio. By Silero.'),
+            'Speaker diarization model that identifies who speaks when in audio.'),
         heightPadding,
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -68,72 +69,120 @@ class _SileroVadWidgetState extends State<SileroVadWidget> {
               ),
           ],
         ),
-    
       ],
     );
   }
 
   void _runVerificationTest() async {
-    final modelPath = await getModelPath('silero_vad.onnx');
-    final silero = SileroVad.load(modelPath);
-    final wavFile = await rootBundle.load('assets/audio_sample_16khz.wav');
-    final result = await silero.doInference(wavFile.buffer.asUint8List());
+    final modelPath = await getModelPath('pyannote_seg3.onnx');
+    final pyannote = Pyannote.load(modelPath);
+
+    // Get test audio file as Float32List
+    final wavFile =
+        await rootBundle.load('assets/audio_sample_ac1_ar16000.pcm');
+    print('wavfile size: ${wavFile.buffer.asUint8List().length}');
+    final processed =
+        Pyannote.int16PcmBytesToFloat32(wavFile.buffer.asUint8List());
+    final result = await pyannote.process(processed);
     setState(() {
-      // obtained on macOS M2 9 Feb 2024.
-      final acceptableAnswers = {
-        0.4739372134208679, // macOS MBP M2 10 Feb 2024
-        0.4739373028278351, // Android Pixel Fold 10 Feb 2024
-        0.4739360809326172, // Web 15 Feb 2024
-      };
-      _verifyPassed = result.length == 3 &&
-          acceptableAnswers.contains(result['output'].first);
+      // Verify the basic structure and content of the result
+      final isValidStructure = result.every((segment) =>
+          segment.containsKey('speaker') &&
+          segment.containsKey('start') &&
+          segment.containsKey('stop'));
+
+      // Verify the expected number of speakers and timing range
+      final speakers = result.map((s) => s['speaker'] as int).toSet();
+      final hasValidSpeakers =
+          speakers.length <= 3 && speakers.every((s) => s >= 0 && s < 3);
+
+      // Verify timing sequence
+      var isValidTiming = true;
+      double lastStop = 0;
+      for (final segment in result) {
+        final start = segment['start'] as double;
+        final stop = segment['stop'] as double;
+        if (start > stop || start < lastStop) {
+          isValidTiming = false;
+          break;
+        }
+        lastStop = stop;
+      }
+      
+      final golden = kIsWeb || Platform.isAndroid
+          ? [
+              {"speaker": 1, "start": 0.8044375, "stop": 4.4494375}
+            ]
+          : [
+              {'start': 0.8381875, 'speaker': 1, 'stop': 4.4831875}
+            ];
+      final matchesGolden = result.length == 1 &&
+          result[0]['speaker'] == golden[0]['speaker'] &&
+          result[0]['start'] == golden[0]['start'] &&
+          result[0]['stop'] == golden[0]['stop'];
+      _verifyPassed = isValidStructure &&
+          hasValidSpeakers &&
+          isValidTiming &&
+          matchesGolden;
+
       if (_verifyPassed != true) {
         if (kDebugMode) {
-          print(
-              'verification of Silero output failed, got ${result['output']}');
+          print('Verification of Pyannote output failed:');
+          print('Structure valid: $isValidStructure');
+          print('Speakers valid: $hasValidSpeakers');
+          print('Timing valid: $isValidTiming');
+          print('Result: $result');
         }
       }
     });
   }
 
   void _runPerformanceTest() async {
-    final modelPath = await getModelPath('silero_vad.onnx');
-    final sileroVad = SileroVad.load(modelPath);
-    final result = await testPerformance(sileroVad);
+    final modelPath = await getModelPath('pyannote_seg3.onnx');
+    final pyannote = Pyannote.load(modelPath);
+    final result = await testPerformance(pyannote);
     setState(() {
       _speedTestResult = result;
     });
   }
 
-  static Future<String> testPerformance(SileroVad sileroVad) async {
-    final vadPerfWavFile =
-        await rootBundle.load('assets/audio_sample_16khz.wav');
-    final bytes = vadPerfWavFile.buffer.asUint8List();
+  Future<String> testPerformance(Pyannote pyannote) async {
+    // Get test audio file as Float32List
+    final wavFile =
+        await rootBundle.load('assets/audio_sample_ac1_ar16000.pcm');
+    final audioData = wavFile.buffer.asFloat32List();
+
     const iterations = 3;
     final Stopwatch sw = Stopwatch();
+
     for (var i = 0; i < iterations; i++) {
       if (i == 1) {
         sw.start();
       }
-      await sileroVad.doInference(bytes);
+      await pyannote.process(audioData);
     }
     sw.stop();
-    debugPrint('Silero VAD performance:');
+
+    debugPrint('Pyannote performance:');
     final average =
         sw.elapsedMilliseconds.toDouble() / (iterations - 1).toDouble();
     debugPrint('  Average: ${average.toStringAsFixed(0)} ms');
     debugPrint('  Total: ${sw.elapsedMilliseconds} ms');
-    const fileDurationMs = 5000;
-    final speedMultilper = fileDurationMs.toDouble() / average;
-    debugPrint('  Speed multiplier: ${speedMultilper.toStringAsFixed(2)}x');
-    debugPrint('  Model path: ${sileroVad.modelPath}');
-    return speedMultilper.toStringAsFixed(2);
+
+    // Assuming test file is 10 seconds long
+    const fileDurationMs = 10000;
+    final speedMultiplier = fileDurationMs.toDouble() / average;
+    debugPrint('  Speed multiplier: ${speedMultiplier.toStringAsFixed(2)}x');
+    debugPrint('  Model path: ${pyannote.modelPath}');
+
+    return speedMultiplier.toStringAsFixed(2);
   }
 
   Future<String> getModelPath(String modelFilenameWithExtension) async {
     if (kIsWeb) {
-      return 'assets/models/sileroVad/$modelFilenameWithExtension';
+      return 'assets/models/pyannote/$modelFilenameWithExtension';
     }
+
     final assetCacheDirectory =
         await path_provider.getApplicationSupportDirectory();
     final modelPath =
@@ -143,14 +192,12 @@ class _SileroVadWidgetState extends State<SileroVadWidget> {
     bool fileExists = await file.exists();
     final fileLength = fileExists ? await file.length() : 0;
 
-    // Do not use path package / path.join for paths.
-    // After testing on Windows, it appears that asset paths are _always_ Unix style, i.e.
-    // use /, but path.join uses \ on Windows.
     final assetPath =
-        'assets/models/sileroVad/${path.basename(modelFilenameWithExtension)}';
+        'assets/models/pyannote/${path.basename(modelFilenameWithExtension)}';
     final assetByteData = await rootBundle.load(assetPath);
     final assetLength = assetByteData.lengthInBytes;
     final fileSameSize = fileLength == assetLength;
+
     if (!fileExists || !fileSameSize) {
       debugPrint(
           'Copying model to $modelPath. Why? Either the file does not exist (${!fileExists}), '
@@ -162,6 +209,7 @@ class _SileroVadWidgetState extends State<SileroVadWidget> {
         assetByteData.offsetInBytes,
         assetByteData.lengthInBytes,
       );
+
       debugPrint('About to copy model to $modelPath');
       try {
         if (!fileExists) {

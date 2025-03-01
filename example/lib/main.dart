@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:fonnx_example/pyannote_widget.dart';
-import 'package:fonnx_example/recorder_widget.dart';
-import 'package:fonnx_example/silero_vad_widget.dart';
-import 'package:fonnx_example/stt_demo_widget.dart';
-import 'package:fonnx_example/whisper_widget.dart';
+import 'package:fonnx_example/viewmodels/recorder_viewmodel.dart';
+import 'package:fonnx_example/views/widgets/pyannote_widget.dart';
+import 'package:fonnx_example/views/pages/recorder_page.dart';
+import 'package:fonnx_example/views/widgets/silero_vad_widget.dart';
+import 'package:provider/provider.dart';
+// import 'package:fonnx_example/stt_demo_widget.dart';
+// import 'package:fonnx_example/whisper_widget.dart';
 
 void main() {
-  runApp(const MyApp());
+  // runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => RecorderViewModel()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -22,24 +32,24 @@ class _MyAppState extends State<MyApp> {
     super.initState();
   }
 
-  Widget buildDemo() {
-    return const Padding(
-      padding: EdgeInsets.only(left: 16, right: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SttDemoWidget(),
-          SizedBox(height: 16),
-          SileroVadWidget(),
-          SizedBox(height: 16),
-          PyannoteWidget(),
-          SizedBox(height: 16),
-          WhisperWidget(),
-          SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
+    // Widget buildDemo() {
+  //   return const Padding(
+  //     padding: EdgeInsets.only(left: 16, right: 16),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         SttDemoWidget(),
+  //         SizedBox(height: 16),
+  //         SileroVadWidget(),
+  //         SizedBox(height: 16),
+  //         PyannoteWidget(),
+  //         SizedBox(height: 16),
+  //         WhisperWidget(),
+  //         SizedBox(height: 16),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
