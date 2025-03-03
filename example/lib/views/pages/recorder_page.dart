@@ -13,18 +13,6 @@ class RecordingScreen extends StatefulWidget {
 class _RecordingScreenState extends State<RecordingScreen> {
   final TextEditingController _textController = TextEditingController();
 
-  // void _toggleRecording() {
-  //   setState(() {
-  //     isRecording = !isRecording;
-  //   });
-  // }
-
-  void _saveText() {
-    // Add save text logic here
-    final text = _textController.text;
-    print('Saved text: $text');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,15 +22,32 @@ class _RecordingScreenState extends State<RecordingScreen> {
             backgroundColor: Colors.blueGrey,
             leading: const Icon(Icons.edit),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () {
-                  // Add your onPressed code here!
+              PopupMenuButton<String>(
+                onSelected: (String result) {
+                  final viewModel = Provider.of<RecorderViewModel>(context, listen: false);
+                  switch (result) {
+                    case 'New':
+                      viewModel.newRecordingNote();
+                      break;
+                    case 'Save':
+                      viewModel.saveRecodingNote();
+                      break;
+                  }
                 },
-              )
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'New',
+                    child: Text('New document'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'Save',
+                    child: Text('Save document'),
+                  ),
+                ],
+              ),
             ]),
         floatingActionButton: Padding(
-            padding: const EdgeInsets.only(bottom: 80.0, right: 20.0),
+            padding: const EdgeInsets.only(bottom: 20.0, right: 20.0),
             child: Consumer<RecorderViewModel>(
                 builder: (context, viewModel, child) {
               return FloatingActionButton(
@@ -74,11 +79,47 @@ class _RecordingScreenState extends State<RecordingScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _saveText,
-                child: const Text('Save Text'),
-              ),
+              // const SizedBox(height: 16),
+              // ElevatedButton(
+              //   onPressed: _saveText,
+              //   child: const Text('Save Text'),
+              // ),
+
+              // Consumer<RecorderViewModel>(
+              //   builder: (context, viewModel, child) {
+              //     return Column(
+              //       children: [
+              //         Text('Recorded Length: ${viewModel.recordedLength}'),
+              //         Slider(
+              //           value: viewModel.currentPosition,
+              //           max: viewModel.recordedLength,
+              //           onChanged: viewModel.isRecording
+              //               ? null
+              //               : (value) {
+              //             viewModel.seekTo(value);
+              //           },
+              //         ),
+              //         Row(
+              //           mainAxisAlignment: MainAxisAlignment.center,
+              //           children: [
+              //             IconButton(
+              //               icon: Icon(viewModel.isPlaying ? Icons.pause : Icons.play_arrow),
+              //               onPressed: viewModel.isRecording
+              //                   ? null
+              //                   : viewModel.isPlaying
+              //                   ? viewModel.pausePlayback
+              //                   : viewModel.startPlayback,
+              //             ),
+              //             IconButton(
+              //               icon: const Icon(Icons.stop),
+              //               onPressed: viewModel.isRecording ? null : viewModel.stopPlayback,
+              //             ),
+              //           ],
+              //         ),
+              //       ],
+              //     );
+              //   },
+              // ),
             ],
           ),
         ));

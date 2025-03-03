@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fonnx_example/services/audio_recording_service.dart';
 import 'package:fonnx_example/viewmodels/recorder_viewmodel.dart';
 import 'package:fonnx_example/views/widgets/pyannote_widget.dart';
 import 'package:fonnx_example/views/pages/recorder_page.dart';
@@ -8,13 +9,14 @@ import 'package:provider/provider.dart';
 // import 'package:fonnx_example/whisper_widget.dart';
 
 void main() {
-  // runApp(const MyApp());
+  final audioRecordingService = AudioRecordingService();
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => RecorderViewModel()),
+        ChangeNotifierProvider(create: (_) => RecorderViewModel(recordingService: audioRecordingService)),
       ],
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }
