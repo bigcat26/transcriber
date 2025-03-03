@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fonnx_example/services/audio_recording_service.dart';
 import 'package:fonnx_example/viewmodels/recorder_viewmodel.dart';
+import 'package:fonnx_example/views/pages/settings_page.dart';
 import 'package:fonnx_example/views/widgets/pyannote_widget.dart';
 import 'package:fonnx_example/views/pages/recorder_page.dart';
 import 'package:fonnx_example/views/widgets/silero_vad_widget.dart';
@@ -56,6 +57,16 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        home: RecordingScreen());
+      title: 'Transcriber',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => RecordingScreen(),
+        '/settings': (context) => SettingsPage(),
+      },
+        // home: RecordingScreen());
+    );
   }
 }

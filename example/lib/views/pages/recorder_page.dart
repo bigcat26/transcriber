@@ -32,6 +32,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
                     case 'Save':
                       viewModel.saveRecodingNote();
                       break;
+                    case 'Settings':
+                      Navigator.pushNamed(context, '/settings');
+                      break;
                   }
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -42,6 +45,10 @@ class _RecordingScreenState extends State<RecordingScreen> {
                   const PopupMenuItem<String>(
                     value: 'Save',
                     child: Text('Save document'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'Settings',
+                    child: Text('Settings'),
                   ),
                 ],
               ),
