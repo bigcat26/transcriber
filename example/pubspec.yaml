@@ -26,17 +26,17 @@ dependencies:
     git:
       url: https://github.com/Telosnex/libmonet.git
       ref: main
-  audioplayers: ^6.0.0
+#  audioplayers: ^6.0.0
   file_picker: ^8.1.2
   collection: ^1.18.0
   record: '<5.2.0'
   record_darwin: '<1.2.0'
-dependency_overrides:
-  audioplayers_web:
-    git:
-      url: https://github.com/bluefireteam/audioplayers.git
-      path: packages/audioplayers_web
-      ref: main
+#dependency_overrides:
+#  audioplayers_web:
+#    git:
+#      url: https://github.com/bluefireteam/audioplayers.git
+#      path: packages/audioplayers_web
+#      ref: main
 dev_dependencies:
   integration_test:
     sdk: flutter
