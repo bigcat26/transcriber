@@ -1,5 +1,8 @@
+import 'package:json_annotation/json_annotation.dart';
 
+part 'proxy_config.g.dart';
 
+@JsonSerializable()
 class ProxyConfig {
   final bool proxyEnabled;
   final String proxyServer;
@@ -12,4 +15,7 @@ class ProxyConfig {
     this.proxyUser = "",
     this.proxyPassword = "",
   });
+
+  factory ProxyConfig.fromJson(Map<String, dynamic> json) => _$ProxyConfigFromJson(json);
+  Map<String, dynamic> toJson() => _$ProxyConfigToJson(this);
 }
