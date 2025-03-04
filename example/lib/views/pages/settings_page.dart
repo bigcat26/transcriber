@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:fonnx_example/viewmodels/app_config_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
   @override
@@ -21,37 +23,46 @@ class SettingsPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Card(
-        child: Column(
-          children: [
-            SwitchListTile(
-              title: Text('Enable Proxy Server'),
-              value: false,
-              onChanged: (bool value) {},
-            ),
-            ListTile(
-              title: TextField(
-                decoration: InputDecoration(
-                  labelText: 'Proxy Server Address',
+        child:
+         Consumer<AppConfigViewModel>(builder: (context, model, child) {
+           final proxyServerController = TextEditingController(text: model.proxyConfig.proxyServer);
+          return Column(
+            children: [
+              SwitchListTile(
+                title: Text('Enable Proxy Server'),
+                value: model.proxyConfig.proxyEnabled,
+                onChanged: (bool value) {},
+              ),
+              ListTile(
+                title: TextField(
+                  controller: proxyServerController,
+                  onChanged: (value) {
+                    // set model.proxyConfig update ...proxyServer
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Proxy Server Address',
+                    hintText: proxyServerController.text
+                  ),
                 ),
               ),
-            ),
-            ListTile(
-              title: TextField(
-                decoration: InputDecoration(
-                  labelText: 'Username',
+              ListTile(
+                title: TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                  ),
                 ),
               ),
-            ),
-            ListTile(
-              title: TextField(
-                decoration: InputDecoration(
-                  labelText: 'Password',
+              ListTile(
+                title: TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                  ),
+                  obscureText: true,
                 ),
-                obscureText: true,
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        }),
       ),
     );
   }
